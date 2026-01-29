@@ -363,9 +363,10 @@ func RuntimeConfigFromPreset(preset AgentPreset) *RuntimeConfig {
 	}
 
 	rc := &RuntimeConfig{
-		Command: info.Command,
-		Args:    append([]string(nil), info.Args...), // Copy to avoid mutation
-		Env:     envCopy,
+		Provider: string(preset),
+		Command:  info.Command,
+		Args:     append([]string(nil), info.Args...), // Copy to avoid mutation
+		Env:      envCopy,
 	}
 
 	// Resolve command path for claude preset (handles alias installations)
@@ -374,7 +375,8 @@ func RuntimeConfigFromPreset(preset AgentPreset) *RuntimeConfig {
 		rc.Command = resolveClaudePath()
 	}
 
-	return rc
+	// Normalize to fill in defaults for Hooks, Session, Tmux, etc.
+	return normalizeRuntimeConfig(rc)
 }
 
 // BuildResumeCommand builds a command to resume an agent session.
