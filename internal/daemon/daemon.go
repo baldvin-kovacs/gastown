@@ -734,11 +734,8 @@ func (d *Daemon) shutdown(state *State) error { //nolint:unparam // error return
 
 	// Stop Dolt server if we're managing it
 	if d.doltServer != nil && d.doltServer.IsEnabled() && !d.doltServer.IsExternal() {
-		if err := d.doltServer.Stop(); err != nil {
-			d.logger.Printf("Warning: failed to stop Dolt server: %v", err)
-		} else {
-			d.logger.Println("Dolt server stopped")
-		}
+		d.doltServer.Stop()
+		d.logger.Println("Dolt server stopped")
 	}
 
 	state.Running = false

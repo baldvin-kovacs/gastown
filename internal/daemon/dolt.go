@@ -273,14 +273,14 @@ func (m *DoltServerManager) startLocked() error {
 	setSysProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
-		logFile.Close()
+		_ = logFile.Close()
 		return fmt.Errorf("starting dolt sql-server: %w", err)
 	}
 
 	// Don't wait for it - it's a long-running server
 	go func() {
 		_ = cmd.Wait()
-		logFile.Close()
+		_ = logFile.Close()
 	}()
 
 	m.process = cmd.Process
@@ -305,24 +305,24 @@ func (m *DoltServerManager) startLocked() error {
 }
 
 // Stop stops the Dolt SQL server.
-func (m *DoltServerManager) Stop() error {
+func (m *DoltServerManager) Stop() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return m.stopLocked()
+	m.stopLocked()
 }
 
 // stopLocked stops the Dolt server. Must be called with m.mu held.
-func (m *DoltServerManager) stopLocked() error {
+func (m *DoltServerManager) stopLocked() {
 	pid, running := m.isRunning()
 	if !running {
-		return nil
+		return
 	}
 
 	m.logger("Stopping Dolt SQL server (PID %d)...", pid)
 
 	process, err := os.FindProcess(pid)
 	if err != nil {
-		return nil // Already gone
+		return // Already gone
 	}
 
 	// Send termination signal for graceful shutdown
@@ -354,8 +354,6 @@ func (m *DoltServerManager) stopLocked() error {
 	// Clean up
 	_ = os.Remove(m.pidFile())
 	m.process = nil
-
-	return nil
 }
 
 // checkHealth checks if the Dolt server is healthy (can accept connections).
